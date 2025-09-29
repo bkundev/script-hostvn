@@ -1,0 +1,116 @@
+#!/bin/bash
+
+######################################################################
+#           Auto Install & Optimize LEMP Stack on Ubuntu             #
+#                                                                    #
+#                Author: Sanvv - HOSTVN Technical                    #
+#                  Website: https://hostvn.vn                        #
+#                                                                    #
+#              Please do not remove copyright. Thank!                #
+#  Please do not copy under any circumstance for commercial reason!  #
+######################################################################
+
+OS=$(grep -oP '(?<=^ID=).+' /etc/os-release | tr -d '"')
+OS_VER=$(grep -w "VERSION_ID=" "/etc/os-release" | cut -f2 -d'=' | cut -f2 -d'"')
+LIST_OS_VER_SUPPORT=('22.04' '24.04')
+
+RED='\033[0;31m'
+NC='\033[0m'
+
+rm -rf ubuntu
+DIR=$(pwd)
+
+# Link tải script chính
+SCRIPT_LINK="https://scripts.hostvn.net/ubuntu"
+
+welcome(){
+    clear
+    printf "========================================================\n"
+    echo   "                   HOSTVN.VN Scripts                      "
+    echo   "     Auto Install & Optimize LEMP Stack on Ubuntu         "
+    printf " Neu can ho tro vui long lien he %s\n" "kythuat@hostvn.net"
+    printf "========================================================\n"
+    echo ""
+    echo "Chuan bi cai dat..."
+    sleep 3
+}
+
+apt update -y
+apt upgrade -y
+apt autoremove -y
+
+# Xóa dịch vụ cũ
+remove_old_service(){
+    apt-get -y remove mysql* mariadb* php* apache2* postfix* rsyslog* nginx* fail2ban
+    rm -rf /etc/nginx /etc/apache2 /etc/php /var/hostvn /etc/my.cnf /etc/mysql \
+           /var/lib/mysql /run/mysqld /etc/fail2ban /usr/share/nginx /usr/bin/hostvn
+    apt-get clean all
+    sed -i '/HOSTVN.VN/d' "$HOME/.bashrc"
+}
+
+# Cài đặt các gói cần thiết
+install_requirement(){
+    apt-get install build-essential gcc g++ make flex bison openssl libssl-dev perl \
+        libaio1 libaio-dev gifsicle webp zlib1g zlib1g-dev libcap-dev cron bzip2 zip \
+        automake autoconf libtool cmake python3 libdb-dev libsasl2-dev \
+        libncurses5 libncurses5-dev libsystemd-dev bind9 dnsutils quota patch logrotate \
+        libc6-dev libexpat1-dev git dos2unix unzip net-tools wget htop nano supervisor \
+        libjpeg-dev libpng-dev libtiff-dev libgif-dev libwebp-dev imagemagick \
+        libpcre3 libpcre3-dev uuid-dev gnupg2 ca-certificates lsb-release pkgconf -y
+
+    systemctl disable supervisor
+    systemctl stop supervisor
+}
+
+# Tạo swap nếu chưa có
+create_swap(){
+    if [[ -z "$(swapon -s)" ]]; then
+        read -r -p "Ban co muon tao swap khong ? (y/n) " confirm_swap
+        if [[ "$confirm_swap" =~ ^[yY]$ ]]; then
+            read -r -p "Nhap dung luong swap (GB): " swap_size
+            if [[ "$swap_size" =~ ^[0-9]+$ && "$swap_size" -gt 0 ]]; then
+                fallocate -l "${swap_size}G" /swapfile
+                chmod 600 /swapfile
+                mkswap /swapfile
+                swapon /swapfile
+                echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+            fi
+        fi
+    fi
+}
+
+# Đặt timezone VN
+set_timezone(){
+    timedatectl set-timezone Asia/Ho_Chi_Minh
+}
+
+# Tải script chính
+download_script(){
+    URL="${SCRIPT_LINK}/hostvn"
+    OUT="hostvn"
+    echo "Dang tai script: $URL"
+    if curl -fSL "$URL" -o "$OUT"; then
+        dos2unix "$OUT" >/dev/null 2>&1 || true
+        chmod +x "$OUT"
+        bash "$OUT"
+    else
+        echo -e "${RED}Khong the tai script tu $URL${NC}"
+        exit 1
+    fi
+}
+
+welcome
+
+if [[ " ${LIST_OS_VER_SUPPORT[*]} " == *" ${OS_VER} "* ]]; then
+    remove_old_service
+    install_requirement
+    create_swap
+    set_timezone
+    download_script
+else
+    clear
+    echo -e "${RED}Ban dang su dung ${OS} ${OS_VER}.${NC}"
+    echo -e "${RED}Scripts chi ho tro Ubuntu 22.04 va 24.04.${NC}"
+    echo -e "${RED}Huy cai dat.${NC}"
+    exit 1
+fi

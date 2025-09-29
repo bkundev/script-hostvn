@@ -21,7 +21,7 @@ rm -rf ubuntu
 DIR=$(pwd)
 
 # Link tải script chính
-SCRIPT_LINK="https://raw.githubusercontent.com/bkundev/script-hostvn/refs/heads/main/"
+SCRIPT_LINK="https://raw.githubusercontent.com/bkundev/script-hostvn/refs/heads/main/hostvn"
 
 welcome(){
     clear

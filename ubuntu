@@ -21,7 +21,7 @@ rm -rf ubuntu
 DIR=$(pwd)
 
 # Link tải script chính
-SCRIPT_LINK="https://scripts.hostvn.net/ubuntu"
+SCRIPT_LINK="https://raw.githubusercontent.com/bkundev/script-hostvn/refs/heads/main/ubuntu"
 
 welcome(){
     clear
@@ -86,7 +86,7 @@ set_timezone(){
 
 # Tải script chính
 download_script(){
-    URL="${SCRIPT_LINK}/hostvn"
+    URL="${SCRIPT_LINK}"
     OUT="hostvn"
     echo "Dang tai script: $URL"
     if curl -fSL "$URL" -o "$OUT"; then

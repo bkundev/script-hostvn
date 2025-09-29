@@ -158,7 +158,7 @@ if [[ " ${OS_LIST[*]} " == *" ${OS} "* ]]; then
             apt autoremove -y
             apt -y install dos2unix
         fi
-        curl -sO "${SCRIPT_LINK}"/"${OS}"
+        curl -sO "${SCRIPT_LINK}"
         dos2unix "${OS}"
         chmod +x "${OS}"
         bash "${OS}"
